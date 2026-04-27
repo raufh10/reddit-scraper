@@ -1,20 +1,25 @@
 package nats
 
-// EventConfig is the validation structure for the YAML
+// ScraperPayload represents the raw JSON structure coming from NATS
+type ScraperPayload struct {
+	Target string `json:"target"` // Raw string: "golang,rust,zig"
+	Pages  int    `json:"pages"`
+	Limit  int    `json:"limit"`
+}
+
+// ScraperEvent is the cleaned, domain-ready version for your scraper
+type ScraperEvent struct {
+	Targets []string // Cleaned slice: ["golang", "rust", "zig"]
+	Pages   int
+	Limit   int
+}
+
+// EventConfig handles your YAML configuration mapping
 type EventConfig struct {
-  Scraper struct {
-    Cron    string `yaml:"cron"`
-    Subject string `yaml:"subject"`
-    Payload any    `yaml:"payload"`
-  } `yaml:"scraper"`
-
-  Pipeline struct {
-    BatchSize     int               `yaml:"batch_size"`
-    FlushInterval string            `yaml:"flush_interval"`
-    Subjects      map[string]string `yaml:"subjects"`
-  } `yaml:"pipeline"`
+	Scraper struct {
+		Cron    string `yaml:"cron"`
+		Subject string `yaml:"subject"`
+		Payload any    `yaml:"payload"`
+	} `yaml:"scraper"`
 }
 
-type PipelineEvent struct {
-  ID string `json:"id"`
-}
