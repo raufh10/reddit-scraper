@@ -22,6 +22,8 @@ func BulkIngestRawPosts(ctx context.Context, db *sqlx.DB, posts []StorablePost) 
   titles := make([]string, len(posts))
   contents := make([]string, len(posts))
   urls := make([]string, len(posts))
+  ups := make([]int, len(posts))
+  ratios := make([]float64, len(posts))
   postedAts := make([]time.Time, len(posts))
   metadatas := make([]string, len(posts))
 
@@ -31,6 +33,8 @@ func BulkIngestRawPosts(ctx context.Context, db *sqlx.DB, posts []StorablePost) 
     titles[i] = p.Title
     contents[i] = p.Content
     urls[i] = p.URL
+    ups[i] = p.Ups
+    ratios[i] = p.UpvoteRatio
     postedAts[i] = time.Unix(int64(p.PostedAt), 0).UTC()
 
     // Marshal the map into a JSON string for the DB
@@ -43,19 +47,26 @@ func BulkIngestRawPosts(ctx context.Context, db *sqlx.DB, posts []StorablePost) 
   }
 
   const query = `
-    INSERT INTO news_posts (reddit_id, subreddit, title, content, url, posted_at, metadata)
+    INSERT INTO news_posts (
+      reddit_id, subreddit, title, content, url, 
+      ups, upvote_ratio, posted_at, metadata
+    )
     SELECT * FROM UNNEST(
       $1::text[], 
       $2::text[], 
       $3::text[], 
       $4::text[], 
       $5::text[], 
-      $6::timestamptz[], 
-      $7::jsonb[]
+      $6::integer[], 
+      $7::numeric[], 
+      $8::timestamptz[], 
+      $9::jsonb[]
     )
     ON CONFLICT (reddit_id, subreddit) DO UPDATE SET
       title = EXCLUDED.title,
       content = EXCLUDED.content,
+      ups = EXCLUDED.ups,
+      upvote_ratio = EXCLUDED.upvote_ratio,
       metadata = EXCLUDED.metadata;
   `
 
@@ -67,6 +78,8 @@ func BulkIngestRawPosts(ctx context.Context, db *sqlx.DB, posts []StorablePost) 
     pq.Array(titles),
     pq.Array(contents),
     pq.Array(urls),
+    pq.Array(ups),
+    pq.Array(ratios),
     pq.Array(postedAts),
     pq.Array(metadatas),
   )

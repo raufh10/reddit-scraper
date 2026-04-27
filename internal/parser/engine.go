@@ -13,6 +13,7 @@ func ProcessResponse(resp RedditResponse) []pg.StorablePost {
   for _, child := range resp.Data.Children {
     data := child.Data
 
+    // We store the full raw data in metadata for future-proofing
     var metadata map[string]interface{}
     rawBytes, err := json.Marshal(data)
     if err == nil {
@@ -20,13 +21,15 @@ func ProcessResponse(resp RedditResponse) []pg.StorablePost {
     }
 
     posts = append(posts, pg.StorablePost{
-      RedditID:  data.RedditID,
-      Subreddit: data.Subreddit,
-      Title:     data.Title,
-      Content:   data.Selftext,
-      URL:       data.URL,
-      PostedAt:  data.CreatedUTC,
-      Metadata:  metadata,
+      RedditID:    data.RedditID,
+      Subreddit:   data.Subreddit,
+      Title:       data.Title,
+      Content:     data.Selftext,
+      URL:         data.URL,
+      Ups:         data.Ups,
+      UpvoteRatio: data.UpvoteRatio,
+      PostedAt:    data.CreatedUTC,
+      Metadata:    metadata,
     })
   }
 
