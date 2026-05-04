@@ -10,6 +10,7 @@ type RedditPostData struct {
   Ups               int                      `json:"ups"`
   UpvoteRatio       float64                  `json:"upvote_ratio"`
   CreatedUTC        float64                  `json:"created_utc"`
+  Permalink         string                   `json:"permalink"`
   LinkFlairRichText []map[string]interface{} `json:"link_flair_richtext"`
 }
 
